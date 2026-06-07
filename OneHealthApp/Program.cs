@@ -234,18 +234,7 @@ class TerminalInterface
         // Lança uma simulação com várias leituras de sensor.
         string sensorId = Prompt("Sensor ID", "S102");
         string zona = Prompt("Zona", "ZONA_ESCOLAR");
-        var random = new Random();
-        var commands = new List<string>();
-
-        for (int i = 0; i < 10; i++)
-        {
-            commands.Add($"& 'dotnet' run --project Sensor -- --once {sensorId} {zona} PM2.5 {random.Next(5, 90)}");
-            commands.Add("Start-Sleep -Milliseconds 500");
-            commands.Add($"& 'dotnet' run --project Sensor -- --once {sensorId} {zona} TEMP {random.Next(15, 36)}");
-            commands.Add("Start-Sleep -Milliseconds 500");
-        }
-
-        StartTerminalPowerShell(string.Join("; ", commands), $"Simulação {sensorId}");
+        StartTerminalCommand("dotnet", $"run --project Sensor -- --auto {sensorId} {zona} 10 1000", $"Simulação {sensorId}");
         await Task.CompletedTask;
     }
 

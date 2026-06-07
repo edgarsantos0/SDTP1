@@ -138,7 +138,7 @@ public static class DataProcessor
                     tipo = reader.GetString(2),
                     valor = reader.GetDouble(3),
                     unidade = reader.GetString(4),
-                    timestampRececao = reader.GetString(5)
+                    timestampRececao = ToLocalTimestamp(reader.GetString(5))
                 });
             }
         }
@@ -259,7 +259,7 @@ public static class DataProcessor
                     tipo = reader.GetString(2),
                     valor = reader.GetDouble(3),
                     unidade = reader.GetString(4),
-                    timestampRececao = reader.GetString(5)
+                    timestampRececao = ToLocalTimestamp(reader.GetString(5))
                 });
             }
         }
@@ -298,6 +298,13 @@ public static class DataProcessor
         return element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null
             ? property.GetString()
             : null;
+    }
+
+    private static string ToLocalTimestamp(string timestamp)
+    {
+        return DateTimeOffset.TryParse(timestamp, out var parsed)
+            ? parsed.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            : timestamp;
     }
 
     private static JsonSerializerOptions JsonOptions()

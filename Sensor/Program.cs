@@ -27,6 +27,15 @@ class Program
             return;
         }
 
+        if (args.Length >= 3 && args[0] == "--auto")
+        {
+            // Executa uma simulação automática sem pedir dados no terminal.
+            int count = args.Length >= 4 && int.TryParse(args[3], out int parsedCount) ? parsedCount : 10;
+            int delayMs = args.Length >= 5 && int.TryParse(args[4], out int parsedDelay) ? parsedDelay : 1000;
+            await RunAutomaticSimulation(channel, args[1], args[2], count, delayMs);
+            return;
+        }
+
         Console.Write("Introduz o ID do sensor: ");
         string sensorId = Console.ReadLine()?.Trim() ?? "S102";
 
@@ -70,14 +79,19 @@ class Program
 
     private static async Task RunAutomaticSimulation(IChannel channel, string sensorId, string zona)
     {
+        await RunAutomaticSimulation(channel, sensorId, zona, count: 10, delayMs: 1000);
+    }
+
+    private static async Task RunAutomaticSimulation(IChannel channel, string sensorId, string zona, int count, int delayMs)
+    {
         // Gera leituras de teste para simular um sensor real.
         var random = new Random();
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < count; i++)
         {
             await PublishReading(channel, sensorId, zona, "PM2.5", random.Next(5, 95).ToString());
             await PublishReading(channel, sensorId, zona, "TEMP", random.Next(12, 35).ToString());
-            await Task.Delay(1000);
+            await Task.Delay(delayMs);
         }
     }
 
