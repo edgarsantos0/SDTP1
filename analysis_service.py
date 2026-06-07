@@ -5,6 +5,7 @@ import json
 
 class AnalysisHandler(BaseHTTPRequestHandler):
     def do_POST(self):
+        # Recebe pedidos RPC de análise do Servidor.
         if self.path != "/rpc/analyze":
             self.send_response(404)
             self.end_headers()
@@ -31,6 +32,7 @@ class AnalysisHandler(BaseHTTPRequestHandler):
 
 
 def analyze(payload):
+    # Calcula estatísticas simples sobre as leituras recebidas.
     readings = payload.get("readings", [])
     values = [float(read_value(reading, "valor")) for reading in readings]
 
@@ -82,6 +84,7 @@ def read_value(reading, name, default=None):
 
 
 def classify_risk(sensor_type, average, maximum):
+    # Classifica o risco com base no tipo de sensor e nos valores.
     if sensor_type == "PM25":
         if maximum >= 75 or average >= 50:
             return "alto"

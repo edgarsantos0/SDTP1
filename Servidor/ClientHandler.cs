@@ -12,6 +12,7 @@ public class ClientHandler
 
     public void Handle()
     {
+        // Lê mensagens TCP enviadas pelo Gateway ou pela interface.
         NetworkStream stream = client.GetStream();
 
         try
@@ -25,6 +26,7 @@ public class ClientHandler
                 string response;
                 try
                 {
+                    // Processa a mensagem e devolve uma resposta JSON.
                     response = DataProcessor.ProcessAsync(message).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)

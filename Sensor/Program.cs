@@ -8,6 +8,7 @@ class Program
 
     static async Task Main(string[] args)
     {
+        // Cria a ligação ao RabbitMQ para publicar leituras do sensor.
         var factory = new ConnectionFactory
         {
             HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost",
@@ -21,6 +22,7 @@ class Program
 
         if (args.Length >= 5 && args[0] == "--once")
         {
+            // Publica uma única leitura quando o Sensor é chamado pela interface.
             await PublishReading(channel, args[1], args[2], args[3], args[4]);
             return;
         }
@@ -68,6 +70,7 @@ class Program
 
     private static async Task RunAutomaticSimulation(IChannel channel, string sensorId, string zona)
     {
+        // Gera leituras de teste para simular um sensor real.
         var random = new Random();
 
         for (int i = 0; i < 10; i++)
@@ -80,6 +83,7 @@ class Program
 
     private static async Task PublishReading(IChannel channel, string sensorId, string zona, string tipo, string valor)
     {
+        // Monta a mensagem e publica no tópico correspondente à zona e ao tipo.
         var reading = new SensorReading(
             SensorId: sensorId.Trim(),
             Zona: zona.Trim().ToUpperInvariant(),

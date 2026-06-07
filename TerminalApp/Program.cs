@@ -13,6 +13,7 @@ class TerminalInterface
 
     public async Task RunAsync()
     {
+        // Mostra o menu principal da aplicação.
         while (true)
         {
             Console.WriteLine();
@@ -86,6 +87,7 @@ class TerminalInterface
 
     private void StartTerminalCommand(string fileName, string arguments, string name)
     {
+        // Abre um novo terminal para executar um componente.
         string command = $"& '{EscapePowerShell(fileName)}' {arguments}";
         StartTerminalPowerShell(command, name);
     }
@@ -113,6 +115,7 @@ class TerminalInterface
 
     private async Task StartRabbitMqLocal()
     {
+        // Garante que o RabbitMQ local está disponível.
         Console.WriteLine("A tentar iniciar RabbitMQ local...");
 
         if (await IsTcpPortOpen("127.0.0.1", 5672))
@@ -217,6 +220,7 @@ class TerminalInterface
 
     private async Task PublishSingleReading()
     {
+        // Recolhe os dados de uma leitura e lança o Sensor.
         string sensorId = Prompt("Sensor ID", "S102");
         string zona = Prompt("Zona", "ZONA_ESCOLAR");
         string tipo = Prompt("Tipo", "PM2.5");
@@ -227,6 +231,7 @@ class TerminalInterface
 
     private async Task SimulateReadings()
     {
+        // Lança uma simulação com várias leituras de sensor.
         string sensorId = Prompt("Sensor ID", "S102");
         string zona = Prompt("Zona", "ZONA_ESCOLAR");
         var random = new Random();
@@ -252,6 +257,7 @@ class TerminalInterface
 
     private async Task RequestAnalysis()
     {
+        // Pede ao Servidor uma nova análise dos dados guardados.
         string sensorId = Prompt("Sensor ID opcional", "");
         string zona = Prompt("Zona opcional", "");
         string tipo = Prompt("Tipo opcional", "PM2.5");
@@ -269,6 +275,7 @@ class TerminalInterface
 
     private async Task SendAndPrintServerCommand(object command)
     {
+        // Envia comandos da interface para o Servidor por TCP.
         try
         {
             using var client = new TcpClient();

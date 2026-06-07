@@ -9,6 +9,7 @@ listener.Start();
 
 Console.WriteLine("Serviço RPC de pré-processamento iniciado em http://localhost:7001/rpc/normalize");
 
+// Fica à espera de pedidos RPC do Gateway.
 while (true)
 {
     var context = await listener.GetContextAsync();
@@ -17,6 +18,7 @@ while (true)
 
 static async Task HandleRequest(HttpListenerContext context)
 {
+    // Trata pedidos de normalização recebidos por HTTP.
     try
     {
         if (context.Request.HttpMethod != "POST" || context.Request.Url?.AbsolutePath != "/rpc/normalize")
@@ -47,6 +49,7 @@ static async Task HandleRequest(HttpListenerContext context)
 
 static NormalizedReading Normalize(SensorReading reading)
 {
+    // Uniformiza o tipo, valor e unidade da leitura.
     string tipo = NormalizeType(reading.Tipo);
     double valor = ParseValue(reading.Valor);
 

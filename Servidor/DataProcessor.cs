@@ -11,6 +11,7 @@ public static class DataProcessor
 
     public static void Initialize()
     {
+        // Cria as tabelas da base de dados se ainda não existirem.
         lock (LockObj)
         {
             using var connection = new SqliteConnection(ConnectionString);
@@ -49,6 +50,7 @@ public static class DataProcessor
 
     public static async Task<string> ProcessAsync(string msg)
     {
+        // Decide se a mensagem é um comando da interface ou uma leitura do Gateway.
         using JsonDocument document = JsonDocument.Parse(msg);
 
         if (document.RootElement.TryGetProperty("command", out var commandProperty))
@@ -75,6 +77,7 @@ public static class DataProcessor
 
     private static void SaveReading(NormalizedReading reading)
     {
+        // Guarda uma leitura normalizada na base de dados.
         lock (LockObj)
         {
             using var connection = new SqliteConnection(ConnectionString);
@@ -108,6 +111,7 @@ public static class DataProcessor
 
     private static List<object> GetLatest()
     {
+        // Obtém as últimas leituras recebidas.
         var readings = new List<object>();
 
         lock (LockObj)
@@ -144,6 +148,7 @@ public static class DataProcessor
 
     private static List<object> GetLatestAnalyses()
     {
+        // Obtém os últimos resultados de análise guardados.
         var analyses = new List<object>();
 
         lock (LockObj)
@@ -180,6 +185,7 @@ public static class DataProcessor
 
     private static async Task<string> AnalyzeAsync(JsonElement command)
     {
+        // Consulta leituras e envia-as ao serviço RPC de análise.
         string? sensorId = GetOptionalString(command, "sensorId");
         string? zona = GetOptionalString(command, "zona")?.ToUpperInvariant();
         string? tipo = GetOptionalString(command, "tipo")?.ToUpperInvariant().Replace(".", "");
@@ -216,6 +222,7 @@ public static class DataProcessor
 
     private static List<object> QueryReadings(string? sensorId, string? zona, string? tipo, string? fromUtc, string? toUtc)
     {
+        // Filtra leituras conforme os parâmetros pedidos pela interface.
         var readings = new List<object>();
 
         lock (LockObj)
@@ -262,6 +269,7 @@ public static class DataProcessor
 
     private static void SaveAnalysis(string? sensorId, string? zona, string? tipo, string? fromUtc, string? toUtc, string resultJson)
     {
+        // Guarda o resultado devolvido pelo serviço de análise.
         lock (LockObj)
         {
             using var connection = new SqliteConnection(ConnectionString);

@@ -15,12 +15,14 @@ public class GatewayServer
     public CsvManager csvManager;
     public GatewayServer()
     {
+        // Carrega a lista de sensores autorizados.
         csvManager = new CsvManager();
         csvManager.Load(ResolveSensorsPath());
     }
 
     public async Task StartAsync()
     {
+        // Inicia a monitorização dos sensores registados.
         new Thread(MonitorSensors).Start();
 
         var factory = new ConnectionFactory
@@ -42,6 +44,7 @@ public class GatewayServer
 
         await channel.QueueBindAsync(queue.QueueName, ExchangeName, "sensor.#");
 
+        // Consome todas as mensagens publicadas pelos sensores.
         var consumer = new AsyncEventingBasicConsumer(channel);
         consumer.ReceivedAsync += async (_, ea) =>
         {
@@ -67,6 +70,7 @@ public class GatewayServer
 
     private void MonitorSensors()
     {
+        // Mostra sensores que não enviam dados há algum tempo.
         while (true)
         {
             foreach (var sensor in csvManager.Sensores.Values)
@@ -83,6 +87,7 @@ public class GatewayServer
 
     private static string ResolveSensorsPath()
     {
+        // Procura o CSV de sensores no output ou na pasta do projeto.
         string outputPath = Path.Combine(AppContext.BaseDirectory, "sensores.csv");
         if (File.Exists(outputPath))
         {
@@ -100,6 +105,7 @@ public class GatewayServer
 
     private async Task ProcessRabbitMessage(string message)
     {
+        // Valida a leitura recebida antes de a enviar para processamento.
         Console.WriteLine("Recebido do RabbitMQ: " + message);
 
         var reading = JsonSerializer.Deserialize<SensorReading>(message, JsonOptions());
@@ -142,6 +148,7 @@ public class GatewayServer
 
     private async Task<NormalizedReading> CallPreProcessingRpc(SensorReading reading)
     {
+        // Chama o serviço RPC que normaliza os dados do sensor.
         string url = Environment.GetEnvironmentVariable("PREPROCESSING_URL") ?? "http://localhost:7001/rpc/normalize";
         using var response = await httpClient.PostAsJsonAsync(url, reading);
         response.EnsureSuccessStatusCode();
@@ -158,6 +165,7 @@ public class GatewayServer
 
     private static async Task SendToServer(NormalizedReading reading)
     {
+        // Envia a leitura normalizada para o Servidor.
         try
         {
             using TcpClient serverClient = new TcpClient();
