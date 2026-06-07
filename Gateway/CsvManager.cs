@@ -9,7 +9,7 @@ public class CsvManager
 
     public CsvManager()
     {
-        Sensores = new Dictionary<string, Sensor>();
+        Sensores = new Dictionary<string, Sensor>(StringComparer.OrdinalIgnoreCase);
     }
 
     public void Load(string path)
@@ -22,7 +22,7 @@ public class CsvManager
 
             Sensor s = new Sensor
             {
-                Id = parts[0],
+                Id = parts[0].Trim().ToUpperInvariant(),
                 Estado = parts[1],
                 Zona = parts[2],
                 TiposDados = parts[3]
@@ -39,6 +39,6 @@ public class CsvManager
 
     public Sensor? GetSensor(string id)
     {
-        return Sensores.TryGetValue(id, out Sensor? sensor) ? sensor : null;
+        return Sensores.TryGetValue(id.Trim(), out Sensor? sensor) ? sensor : null;
     }
 }

@@ -54,7 +54,7 @@ static NormalizedReading Normalize(SensorReading reading)
     double valor = ParseValue(reading.Valor);
 
     return new NormalizedReading(
-        SensorId: reading.SensorId.Trim(),
+        SensorId: reading.SensorId.Trim().ToUpperInvariant(),
         Zona: reading.Zona.Trim().ToUpperInvariant(),
         Tipo: tipo,
         Valor: valor,

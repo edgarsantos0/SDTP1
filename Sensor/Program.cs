@@ -99,7 +99,7 @@ class Program
     {
         // Monta a mensagem e publica no tópico correspondente à zona e ao tipo.
         var reading = new SensorReading(
-            SensorId: sensorId.Trim(),
+            SensorId: sensorId.Trim().ToUpperInvariant(),
             Zona: zona.Trim().ToUpperInvariant(),
             Tipo: tipo.Trim().ToUpperInvariant(),
             Valor: valor.Trim(),

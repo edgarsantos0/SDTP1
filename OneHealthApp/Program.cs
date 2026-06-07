@@ -41,24 +41,24 @@ class TerminalInterface
                     await StartRabbitMqLocal();
                     break;
                 case "2":
-                    StartTerminalCommand("dotnet", "run --project PreProcessingService", "Pré-processamento RPC");
+                    StartDotnetProject("PreProcessingService", "Pré-processamento RPC");
                     break;
                 case "3":
                     StartTerminalCommand("python", "analysis_service.py", "Análise RPC");
                     break;
                 case "4":
-                    StartTerminalCommand("dotnet", "run --project Servidor", "Servidor");
+                    StartDotnetProject("Servidor", "Servidor");
                     break;
                 case "5":
-                    StartTerminalCommand("dotnet", "run --project Gateway", "Gateway");
+                    StartDotnetProject("Gateway", "Gateway");
                     break;
                 case "6":
                     await StartRabbitMqLocal();
                     await Task.Delay(3000);
-                    StartTerminalCommand("dotnet", "run --project PreProcessingService", "Pré-processamento RPC");
+                    StartDotnetProject("PreProcessingService", "Pré-processamento RPC");
                     StartTerminalCommand("python", "analysis_service.py", "Análise RPC");
-                    StartTerminalCommand("dotnet", "run --project Servidor", "Servidor");
-                    StartTerminalCommand("dotnet", "run --project Gateway", "Gateway");
+                    StartDotnetProject("Servidor", "Servidor");
+                    StartDotnetProject("Gateway", "Gateway");
                     break;
                 case "7":
                     await PublishSingleReading();
@@ -90,6 +90,12 @@ class TerminalInterface
         // Abre um novo terminal para executar um componente.
         string command = $"& '{EscapePowerShell(fileName)}' {arguments}";
         StartTerminalPowerShell(command, name);
+    }
+
+    private void StartDotnetProject(string project, string name)
+    {
+        // Executa projetos .NET sem recompilar executáveis já abertos.
+        StartTerminalCommand("dotnet", $"run --no-build --project {project}", name);
     }
 
     private void StartTerminalPowerShell(string command, string name)
@@ -226,6 +232,15 @@ class TerminalInterface
         string tipo = Prompt("Tipo", "PM2.5");
         string valor = Prompt("Valor", "18.5");
 
+        sensorId = NormalizeInput(sensorId);
+        zona = NormalizeInput(zona);
+        tipo = NormalizeInput(tipo);
+
+        if (!await EnsureDataPipelineAsync())
+        {
+            return;
+        }
+
         await RunSensorOnce(sensorId, zona, tipo, valor);
     }
 
@@ -234,8 +249,65 @@ class TerminalInterface
         // Lança uma simulação com várias leituras de sensor.
         string sensorId = Prompt("Sensor ID", "S102");
         string zona = Prompt("Zona", "ZONA_ESCOLAR");
+
+        sensorId = NormalizeInput(sensorId);
+        zona = NormalizeInput(zona);
+
+        if (!await EnsureDataPipelineAsync())
+        {
+            return;
+        }
+
         StartTerminalCommand("dotnet", $"run --project Sensor -- --auto {sensorId} {zona} 10 1000", $"Simulação {sensorId}");
         await Task.CompletedTask;
+    }
+
+    private async Task<bool> EnsureDataPipelineAsync()
+    {
+        // Garante que existem componentes ativos para guardar as leituras.
+        bool startedAny = false;
+
+        await StartRabbitMqLocal();
+
+        if (!await IsTcpPortOpen("127.0.0.1", 7001))
+        {
+            StartDotnetProject("PreProcessingService", "Pré-processamento RPC");
+            startedAny = true;
+        }
+
+        if (!await IsTcpPortOpen("127.0.0.1", 6000))
+        {
+            StartDotnetProject("Servidor", "Servidor");
+            startedAny = true;
+        }
+
+        if (!IsWorkspaceProcessRunning("Gateway"))
+        {
+            StartDotnetProject("Gateway", "Gateway");
+            startedAny = true;
+        }
+
+        if (startedAny)
+        {
+            Console.WriteLine("A aguardar pelo arranque dos componentes...");
+            await Task.Delay(5000);
+        }
+
+        bool serverReady = await IsTcpPortOpen("127.0.0.1", 6000);
+        bool preprocessingReady = await IsTcpPortOpen("127.0.0.1", 7001);
+        bool gatewayReady = IsWorkspaceProcessRunning("Gateway");
+
+        if (serverReady && preprocessingReady && gatewayReady)
+        {
+            return true;
+        }
+
+        Console.WriteLine("Não foi possível confirmar o pipeline completo:");
+        Console.WriteLine($"- Servidor TCP 6000: {(serverReady ? "OK" : "FALHOU")}");
+        Console.WriteLine($"- Pré-processamento 7001: {(preprocessingReady ? "OK" : "FALHOU")}");
+        Console.WriteLine($"- Gateway: {(gatewayReady ? "OK" : "FALHOU")}");
+        Console.WriteLine("As leituras não foram enviadas para evitar perder dados.");
+        return false;
     }
 
     private async Task RunSensorOnce(string sensorId, string zona, string tipo, string valor)
@@ -308,6 +380,26 @@ class TerminalInterface
     private static string? EmptyToNull(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static string NormalizeInput(string value)
+    {
+        return value.Trim().ToUpperInvariant();
+    }
+
+    private bool IsWorkspaceProcessRunning(string processName)
+    {
+        return Process.GetProcessesByName(processName).Any(process =>
+        {
+            try
+            {
+                return process.MainModule?.FileName?.StartsWith(root, StringComparison.OrdinalIgnoreCase) == true;
+            }
+            catch
+            {
+                return false;
+            }
+        });
     }
 
     private static string EscapePowerShell(string value)
