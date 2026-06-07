@@ -8,7 +8,7 @@ Repositório para o trabalho de Sistemas Distribuídos
 - `PreProcessingService`: serviço RPC HTTP em C# para normalização de dados.
 - `Servidor`: recebe leituras normalizadas, persiste em SQLite e chama o RPC de análise.
 - `analysis_service.py`: serviço RPC HTTP em Python para estatísticas, deteção de padrões simples e risco.
-- `TerminalApp`: interface básica de terminal para iniciar componentes, publicar leituras e pedir análises.
+- `OneHealthApp`: interface básica de terminal para iniciar componentes, publicar leituras e pedir análises.
 
 ## Execução recomendada
 
@@ -28,7 +28,7 @@ dotnet restore Gateway\Gateway.sln
 Executar a interface principal:
 
 ```powershell
-dotnet run --project TerminalApp
+dotnet run --project OneHealthApp
 ```
 
 No menu, usar a opção `6. Iniciar tudo`. Depois é possível publicar leituras, simular sensores, consultar últimas leituras e pedir análises.

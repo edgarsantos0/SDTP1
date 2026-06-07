@@ -72,7 +72,7 @@ dotnet restore Gateway\Gateway.sln
 Na raiz do projeto:
 
 ```powershell
-dotnet run --project TerminalApp
+dotnet run --project OneHealthApp
 ```
 
 Vai aparecer o menu principal:
